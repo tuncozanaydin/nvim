@@ -32,6 +32,12 @@ vim.api.nvim_create_autocmd("FileType", { pattern = "markdown", callback = funct
   end, { buffer = a.buf })
 end })
 
+-- hide all equation images while inserting; redraw (from cache) on leaving
+vim.api.nvim_create_autocmd("InsertEnter", { pattern = "*.md",
+  callback = function(a) require("render_latex.renderer").clear(a.buf) end })
+vim.api.nvim_create_autocmd("InsertLeave", { pattern = "*.md",
+  callback = function() require("render_latex").refresh() end })
+
 local lazy = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazy) then
   vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable",
@@ -47,6 +53,11 @@ require("lazy").setup({
     heading = { icons = {}, sign = false },
     checkbox = { unchecked = { icon = "[ ]" }, checked = { icon = "[x]" } },
     bullet = { icons = { "•", "◦", "▪" } },
+  } },
+  { "techwizrd/render-latex.nvim", ft = "markdown", opts = {
+    render_modes = { "n" }, -- with the autocmds below: no images in insert mode
+    render = { text_scale = 0.3, scale = 4, foreground = "#ffffff", live_preview = false }, -- raw source only while editing
+    image = { cell_width_px = 22, cell_height_px = 50 }, -- 2x the measured 11x25 (kitten icat --print-window-size): supersample
   } },
   { "folke/which-key.nvim", event = "VeryLazy", opts = {} },
   { "echasnovski/mini.nvim", config = function()
